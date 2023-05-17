@@ -17,11 +17,56 @@ function render(state = store.Home) {
   router.updatePageLinks();
 }
 
+// code for specific view
+// runs after every view
 function afterRender(state) {
 // add menu toggle to bars icon in nav bar
 document.querySelector(".fa-bars").addEventListener("click", () => {
   document.querySelector("nav > ul").classList.toggle("hidden--mobile");
 });
+
+if (state.view === "Order") {
+  document.querySelector("form").addEventListener("submit", event => {
+    // Prevent the default action AKA redirects to the same URL using POST method
+    event.preventDefault();
+
+    const inputList = event.target.elements;
+    console.log("Input Element List", inputList);
+
+    const toppings = [];
+    // Interate over the toppings input group elements
+    for (let input of inputList.toppings) {
+      // If the value of the checked attribute is true then add the value to the toppings array
+      if (input.checked) {
+        toppings.push(input.value);
+      }
+    }
+
+    const requestData = {
+      customer: inputList.customer.value,
+      crust: inputList.crust.value,
+      cheese: inputList.cheese.value,
+      sauce: inputList.sauce.value,
+      // could also be:
+      // toppings
+      // (because the values are the same)
+      toppings: toppings
+
+    };
+    console.log("request Body", requestData);
+
+    axios
+      .post(`${process.env.PIZZA_PLACE_API_URL}/pizzas`, requestData)
+      .then(response => {
+        // Push the new pizza onto the Pizza state pizzas attribute, so it can be displayed in the pizza list
+        store.Pizza.pizzas.push(response.data);
+        router.navigate("/Pizza");
+      })
+      .catch(error => {
+        console.log("It puked", error);
+      });
+  });
+}
 }
 
 router.hooks({
@@ -34,7 +79,7 @@ router.hooks({
   axios
     // Get request to retrieve the current weather data using the API key and providing a city name
     .get(
-      `https://api.openweathermap.org/data/2.5/weather?appid=${process.env.OPEN_WEATHER_MAP_API_KEY}&q=st%20louis`
+      `https://api.openweathermap.org/data/2.5/weather?appid=${process.env.ecd99d2b10af51b864f9fb8f8415f143}&q=st%20louis`
     )
     .then(response => {
       // Convert Kelvin to Fahrenheit since OpenWeatherMap does provide otherwise
